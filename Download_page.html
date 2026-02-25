@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VCE — Video Content ID Extractor</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0d0d0f;
+            --surface: #141416;
+            --surface2: #1c1c1f;
+            --border: rgba(255,255,255,0.07);
+            --accent: #0a84ff;
+            --accent2: #5e5ce6;
+            --green: #34c759;
+            --text: #f0f0f5;
+            --muted: #8e8e99;
+            --card-bg: rgba(255,255,255,0.04);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, 'SF Pro Display', 'Inter', BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            height: 60px;
+            background: rgba(13,13,15,0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .nav-logo-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: color 0.15s;
+        }
+
+        .nav-links a:hover { color: var(--text); }
+
+        .nav-cta {
+            padding: 7px 16px;
+            background: var(--accent);
+            color: #fff !important;
+            border-radius: 8px;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            transition: opacity 0.15s !important;
+        }
+
+        .nav-cta:hover { opacity: 0.85; color: #fff !important; }
+
+        /* ── HERO ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 100px 24px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -200px; left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(ellipse, rgba(10,132,255,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 14px;
+            background: rgba(10,132,255,0.1);
+            border: 1px solid rgba(10,132,255,0.25);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .hero h1 {
+            font-size: clamp(36px, 6vw, 72px);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.08;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 30%, #8e8e99 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: clamp(15px, 2vw, 18px);
+            color: var(--muted);
+            max-width: 520px;
+            margin: 0 auto 40px;
+            line-height: 1.65;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 26px;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: opacity 0.15s, transform 0.15s;
+            box-shadow: 0 4px 20px rgba(10,132,255,0.35);
+        }
+
+        .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 26px;
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.15s, transform 0.15s;
+        }
+
+        .btn-secondary:hover { background: rgba(255,255,255,0.07); transform: translateY(-1px); }
+
+        /* ── WIDGET PREVIEW ── */
+        .preview-section {
+            padding: 80px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: clamp(24px, 4vw, 38px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .section-sub {
+            color: var(--muted);
+            font-size: 15px;
+            text-align: center;
+            max-width: 480px;
+            margin-bottom: 52px;
+        }
+
+        /* Fake widget mockup */
+        .widget-mockup {
+            width: 320px;
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 0.5px rgba(255,255,255,0.05);
+        }
+
+        .widget-titlebar {
+            display: flex;
+            align-items: center;
+            padding: 11px 14px 10px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            gap: 10px;
+        }
+
+        .tl-group { display: flex; gap: 6px; }
+
+        .tl {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+        }
+
+        .tl-r { background: #ff5f57; }
+        .tl-y { background: #febc2e; }
+        .tl-g { background: #28c840; }
+
+        .widget-title-text {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.85);
+            margin-right: 46px;
+        }
+
+        .widget-body { padding: 12px 14px 14px; }
+
+        .widget-status {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 10px;
+            background: rgba(52,199,89,0.1);
+            border: 1px solid rgba(52,199,89,0.25);
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #34c759;
+            margin-bottom: 10px;
+        }
+
+        .status-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #34c759;
+        }
+
+        .widget-open-btn {
+            width: 100%;
+            padding: 8px 14px;
+            background: linear-gradient(180deg, #0a84ff, #0070e0);
+            color: #fff;
+            border: none;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,112,224,0.4);
+        }
+
+        .widget-copy-all {
+            width: 100%;
+            padding: 7px 14px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 9px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .widget-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 9px 11px 10px;
+            margin-bottom: 8px;
+        }
+
+        .widget-card-id {
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 10px;
+            color: #0a84ff;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .widget-card-footer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 20px;
+            color: white;
+        }
+
+        .badge-na { background: linear-gradient(135deg, #5e5ce6, #7c3aed); }
+        .badge-eu { background: linear-gradient(135deg, #0a84ff, #0055d4); }
+        .badge-fe { background: linear-gradient(135deg, #34c759, #1a7f37); }
+
+        .source-tag {
+            font-size: 9px;
+            font-weight: 600;
+            padding: 3px 7px;
+            border-radius: 20px;
+            color: white;
+            background: linear-gradient(135deg, #f6ad55, #ed8936);
+        }
+
+        .copy-btn-mock {
+            margin-left: auto;
+            padding: 4px 11px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 7px;
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* ── FEATURES ── */
+        .features-section {
+            padding: 80px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 52px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(10,132,255,0.3);
+            background: rgba(10,132,255,0.04);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .feature-card h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: -0.01em;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* ── MARKETPLACES ── */
+        .marketplaces-section {
+            padding: 80px 24px;
+            text-align: center;
+        }
+
+        .marketplace-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            max-width: 800px;
+            margin: 40px auto 0;
+        }
+
+        .marketplace-pill {
+            padding: 6px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--muted);
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .marketplace-pill:hover {
+            border-color: rgba(10,132,255,0.4);
+            color: var(--text);
+        }
+
+        /* ── INSTALL ── */
+        .install-section {
+            padding: 80px 24px;
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 40px;
+            text-align: left;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 18px 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .step-content h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .step-content a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .step-content a:hover { text-decoration: underline; }
+
+        /* ── REGION LEGEND ── */
+        .region-legend {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 32px;
+        }
+
+        .region-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-left {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .footer-left strong { color: var(--text); }
+
+        .footer-right {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-right a {
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .footer-right a:hover { color: var(--text); }
+
+        /* ── DIVIDER ── */
+        .divider {
+            width: 100%;
+            height: 1px;
+            background: var(--border);
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            nav { padding: 0 20px; }
+            .nav-links { display: none; }
+            footer { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    
+<!-- NAV -->
+<nav>
+    <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">🎬</div>
+        VCE
+    </a>
+    <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#marketplaces">Marketplaces</a></li>
+        <li><a href="#install">Install</a></li>
+        <li><a href="#install" class="nav-cta">Get Script</a></li>
+    </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Tampermonkey Userscript · v1.5.7
+    </div>
+    <h1>Extract Video IDs<br /><span>in one click.</span></h1>
+    <p class="hero-sub">
+        A floating widget for Amazon product pages that instantly detects, deduplicates, and links Video Content IDs directly to VSE Fixer — across 30+ marketplaces.
+    </p>
+    <div class="hero-actions">
+        <a href="#install" class="btn-primary">↓ &nbsp;Install Script</a>
+        <a href="#features" class="btn-secondary">See Features →</a>
+    </div>
+</section>
+
+<!-- WIDGET PREVIEW -->
+<section class="preview-section" id="preview">
+    <div class="section-label">Live Preview</div>
+    <div class="section-title">What you'll see on the page</div>
+    <p class="section-sub">A compact, draggable panel appears on every Amazon product page — no setup required after install.</p>
+
+    <div class="widget-mockup">
+        <div class="widget-titlebar">
+            <div class="tl-group">
+                <div class="tl tl-r"></div>
+                <div class="tl tl-y"></div>
+                <div class="tl tl-g"></div>
+            </div>
+            <div class="widget-title-text">Video ID Extractor</div>
+        </div>
+        <div class="widget-body">
+            <div class="widget-status">
+                <div class="status-dot"></div>
+                Found 2 Video Content IDs
+            </div>
+            <div class="widget-open-btn">Open All 2 Videos</div>
+            <div class="widget-copy-all">⎘ &nbsp;Copy All (2)</div>
+
+            <div class="widget-card">
+                <div class="widget-card-id">a3f1c9e2b7d04f8a1e6c2d9b3f7a0e4c</div>
+                <div class="widget-card-footer">
+                    <span class="badge badge-na">NA</span>
+                    <span class="source-tag">MediaBlock</span>
+                    <span class="copy-btn-mock">Copy</span>
+                </div>
+            </div>
+
+            <div class="widget-card">
+                <div class="widget-card-id">7b2e4d1a9c6f3e8b0d5a2c7f4e1b9d3a</div>
+                <div class="widget-card-footer">
+                    <span class="badge badge-eu">EU</span>
+                    <span class="source-tag" style="background: linear-gradient(135deg, #718096, #4a5568);">primaryView</span>
+                    <span class="copy-btn-mock">Copy</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+    <div style="text-align:center">
+        <div class="section-label">Capabilities</div>
+        <div class="section-title">Everything you need, nothing you don't</div>
+        <p class="section-sub">Built for speed. Designed to stay out of your way.</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon" style="background: rgba(10,132,255,0.12);">⚡</div>
+            <h3>Auto-Detection</h3>
+            <p>Scans the page automatically on load using a MutationObserver. No manual trigger needed — IDs appear as soon as the page renders.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background: rgba(94,92,230,0.12);">🔗</div>
+            <h3>VSE Fixer Deep Links</h3>
+            <p>Every ID is a clickable link that opens directly in VSE Fixer with the correct region pre-selected — NA, EU, or FE.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background: rgba(52,199,89,0.12);">🗂</div>
+            <h3>Deduplication</h3>
+            <p>IDs found across multiple selectors are merged into a single card. Source tags show exactly which component each ID came from.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background: rgba(255,159,10,0.12);">📋</div>
+            <h3>One-Click Copy</h3>
+            <p>Copy individual IDs or all IDs at once with a single click. A toast notification confirms every clipboard action.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background: rgba(255,59,48,0.1);">🪟</div>
+            <h3>Open All in Tabs</h3>
+            <p>The "Open All" button launches every detected video in VSE Fixer simultaneously — one click, multiple tabs.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background: rgba(10,132,255,0.08);">🎛</div>
+            <h3>macOS-Style Controls</h3>
+            <p>Traffic light buttons to close, minimize, or compact the panel. Fully draggable. Reopens from a floating 🎬 button.</p>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MARKETPLACES -->
+<section class="marketplaces-section" id="marketplaces">
+    <div class="section-label">Coverage</div>
+    <div class="section-title">30+ Amazon Marketplaces</div>
+    <p class="section-sub" style="margin: 12px auto 0;">Automatic region detection for every supported storefront.</p>
+
+    <div class="region-legend">
+        <div class="region-item"><span class="badge badge-na">NA</span> North America</div>
+        <div class="region-item"><span class="badge badge-eu">EU</span> Europe &amp; Middle East</div>
+        <div class="region-item"><span class="badge badge-fe">FE</span> Far East &amp; Pacific</div>
+    </div>
+
+    <div class="marketplace-grid">
+        <span class="marketplace-pill">amazon.com</span>
+        <span class="marketplace-pill">amazon.co.uk</span>
+        <span class="marketplace-pill">amazon.de</span>
+        <span class="marketplace-pill">amazon.fr</span>
+        <span class="marketplace-pill">amazon.it</span>
+        <span class="marketplace-pill">amazon.es</span>
+        <span class="marketplace-pill">amazon.in</span>
+        <span class="marketplace-pill">amazon.co.jp</span>
+        <span class="marketplace-pill">amazon.ca</span>
+        <span class="marketplace-pill">amazon.com.au</span>
+        <span class="marketplace-pill">amazon.com.br</span>
+        <span class="marketplace-pill">amazon.com.mx</span>
+        <span class="marketplace-pill">amazon.nl</span>
+        <span class="marketplace-pill">amazon.se</span>
+        <span class="marketplace-pill">amazon.pl</span>
+        <span class="marketplace-pill">amazon.sa</span>
+        <span class="marketplace-pill">amazon.ae</span>
+        <span class="marketplace-pill">amazon.eg</span>
+        <span class="marketplace-pill">amazon.com.tr</span>
+        <span class="marketplace-pill">amazon.sg</span>
+        <span class="marketplace-pill">amazon.co.th</span>
+        <span class="marketplace-pill">amazon.co.id</span>
+        <span class="marketplace-pill">amazon.co.za</span>
+        <span class="marketplace-pill">amazon.com.be</span>
+        <span class="marketplace-pill">amazon.com.co</span>
+        <span class="marketplace-pill">amazon.cl</span>
+        <span class="marketplace-pill">amazon.com.ng</span>
+        <span class="marketplace-pill">amazon.ie</span>
+        <span class="marketplace-pill">amazon.qa</span>
+        <span class="marketplace-pill">amazon.cn</span>
+        <span class="marketplace-pill">amazon.ru</span>
+    </div>
+</section>
+
+
+
+<div class="divider"></div>
+
+<!-- INSTALL -->
+<section class="install-section" id="install">
+    <div class="section-label">Get Started</div>
+    <div class="section-title">Install in 2 steps</div>
+    <p class="section-sub">No build tools. No configuration. Just install Tampermonkey and click the button below.</p>
+
+    <div class="steps">
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <h4>Install Tampermonkey</h4>
+                <p>Get the Tampermonkey extension for
+                    <a href="https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo" target="_blank">Chrome</a>
+                    or
+                    <a href="https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/" target="_blank">Firefox</a>
+                    if you haven't already.
+                </p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <h4>Click "Install Script"</h4>
+                <p>Hit the button below. Tampermonkey will open automatically and ask you to confirm the installation. Click <strong>Install</strong> and you're done.</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 32px;">
+        <a href="https://YOUR-SERVER-URL/vce.user.js" class="btn-primary" style="display: inline-flex; margin: 0 auto;">
+            ↓ &nbsp;Install Script
+        </a>
+    </div>
+
+    <p style="margin-top: 16px; font-size: 12px; color: var(--muted); text-align: center;">
+        Requires Tampermonkey · Works on Chrome &amp; Firefox
+    </p>
+</section>
+
+<div class="divider"></div>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-left">
+        Built by <strong>Shouvik Banerjee</strong> (bshouvik) · Amazon IVE Team
+    </div>
+    <div class="footer-right">
+        <a href="#features">Features</a>
+        <a href="#marketplaces">Marketplaces</a>
+        <a href="#install">Install</a>
+    </div>
+</footer>
+
+</body>
+</html>
